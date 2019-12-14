@@ -327,6 +327,16 @@ def plot_day_heatmap(reports):
             axs[0].axvline(idd, linestyle='dashed',alpha=0.2)
 
 
+    #visualize start & end time of days
+    #duration of work 
+    #real duration spent working/at rest
+
+    #efficiency measurements:
+    # ratio of real to start-to-end time
+    # -number of sessions per day
+    # -minutes of deep work
+
+
 
     #----------------------------
     axleft    = 0.18
