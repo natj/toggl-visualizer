@@ -7,6 +7,10 @@ from matplotlib.colors import Normalize
 from matplotlib.cm import get_cmap
 from matplotlib import colorbar
 
+from datetime import datetime
+from datetime import timedelta
+
+
 #global figcounter = 0
 #class Fig:
 #
@@ -177,9 +181,6 @@ def plot_day_hist(reports):
                 break
 
 
-
-
-
     #----------------------------
     #setup figure
     fig = plt.figure(1, figsize=(3.487, 2.5))
@@ -217,6 +218,128 @@ def plot_day_hist(reports):
 
 
 
+
+def plot_day_heatmap(reports):
+
+    #find first and last day
+
+    #find smallest and largest days
+    d1 = datetime.now() - timedelta(days=1000)
+    d0 = datetime.now()
+    for r in reports:
+        day = r['day']
+
+        if day < d0:
+            d0 = day
+        if day > d1:
+            d1 = day
+
+    Ndays = (d1-d0).days + 10
+    print("sample days", Ndays)
+    print("start:", d0)
+    print("end:  ", d1)
+
+    #------------------
+    # build heatmap data
+
+    N = 100
+    bins = np.linspace(0.0, 24.0, N)
+
+    hist         = np.zeros((N, Ndays)) #all
+    hist_deep    = np.zeros((N, Ndays)) #deep work
+    hist_shallow = np.zeros((N, Ndays)) #shallow work
+    hist_coll    = np.zeros((N, Ndays)) #collaborative
+
+
+    for r in reports:
+        day = r['day']
+        tstart = r['start']
+        tstop =  r['end']
+        t0 = tstart.hour + tstart.minute/60.0
+        t1 = tstop.hour + tstop.minute/60.0
+
+        idd = (day - d0).days
+
+
+        idx = find_nearest(bins, t0)
+        while True:
+            if bins[idx] < t1:
+
+                #all
+                hist[idx, idd] += 1
+
+                #deep work
+                if r['project'] in deep_work_labels:
+                    hist_deep[idx,idd] += 1
+
+                #shallow work
+                if r['project'] in shallow_work_labels:
+                    hist_shallow[idx,idd] += 1
+
+                #collaborative
+                if r['project'] in collaboration_work_labels:
+                    hist_coll[idx,idd] += 1
+
+                idx += 1
+            else:
+                break
+
+    #----------------------------
+    #setup figure
+    fig = plt.figure(1, figsize=(7.0, 3.5))
+    gs = plt.GridSpec(1, 1)
+    gs.update(hspace=0.0)
+
+    axs = []
+    axs.append(plt.subplot(gs[0, 0]))
+
+    for ax in axs:
+        ax.minorticks_on()
+    #----------------------------
+
+    extent = [ 0, Ndays, 0.0, 24.0 ]
+
+    #hist = np.ma.masked_where(hist_deep == 0, hist_deep)
+    #hist = np.ma.masked_where(hist_shallow == 0, hist_shallow)
+
+    hist = np.ma.masked_where(hist == 0, hist)
+    axs[0].imshow(hist, 
+            extent=extent,
+            origin='lower',
+            cmap='Reds',
+            interpolation='nearest',
+            aspect='auto',
+            vmin = 0,
+            vmax = 3,
+            )
+
+
+    #parse mondays
+    for idd in range(Ndays):
+        day = d0 + timedelta(days=idd)
+
+        #monday
+        if day.weekday() == 0:
+            axs[0].axvline(idd, linestyle='dotted',alpha=0.15)
+
+        #first day of month
+        if day.day == 1:
+            axs[0].axvline(idd, linestyle='dashed',alpha=0.2)
+
+
+
+    #----------------------------
+    axleft    = 0.18
+    axbottom  = 0.16
+    axright   = 0.96
+    axtop     = 0.95
+    fig.subplots_adjust(left=axleft, bottom=axbottom, right=axright, top=axtop)
+    fig.savefig('day_heatmap.pdf')
+
+    #----------------------------
+
+
+
 if __name__ == "__main__":
 
     plt.rc("font", family="sans-serif")
@@ -232,7 +355,7 @@ if __name__ == "__main__":
     #visualize
     plot_duration_hist(reports)
     plot_day_hist(reports)
-
+    plot_day_heatmap(reports)
 
 
 
