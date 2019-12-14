@@ -54,6 +54,10 @@ def read_csv2dict(fname):
                     'duration':    tlen,
                     }
 
+                #remove summary line
+                if d['project'] == '':
+                    continue
+
                 data.append(d)
             line_count += 1
     return data
