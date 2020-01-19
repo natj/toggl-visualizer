@@ -40,6 +40,11 @@ def read_csv2dict(fname):
 
                 #parse times
                 tstart = datetime.strptime(row['Start time'], '%H:%M:%S')
+
+                #zero duration stamps do not have ending times
+                #print(row['Start time'], row['End time'], row['Duration'])
+                if row['End time'] == '':
+                    continue
                 tend   = datetime.strptime(row['End time'],   '%H:%M:%S')
 
                 tlenP   = datetime.strptime(row['Duration'],   '%H:%M:%S')

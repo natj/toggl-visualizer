@@ -58,12 +58,14 @@ project_info = {
         'organize/reflect' :{ 'idn':5,  'mode':'deep'},
         'RadTurb'          :{ 'idn':6,  'mode':'deep'},
         'runko'            :{ 'idn':7,  'mode':'deep'},
-        'toggl-visz'       :{ 'idn':8,  'mode':'deep'},
+        'corgi'            :{ 'idn':8,  'mode':'deep'},
+        'productivity'     :{ 'idn':9,  'mode':'deep'},
+        'toggl-visz'       :{ 'idn':10, 'mode':'deep'},
         #collaborative
-        'corrugation'      :{ 'idn':9,  'mode':'coll'},
-        'ML-dynamos'       :{ 'idn':10, 'mode':'coll'},
-        'sheets'           :{ 'idn':11, 'mode':'coll'},
-        'shocks'           :{ 'idn':12, 'mode':'coll'},
+        'corrugation'      :{ 'idn':11, 'mode':'coll'},
+        'ML-dynamos'       :{ 'idn':11, 'mode':'coll'},
+        'sheets'           :{ 'idn':13, 'mode':'coll'},
+        'shocks'           :{ 'idn':14, 'mode':'coll'},
         }
 
 
@@ -458,6 +460,9 @@ def plot_timeline(reports):
     for ax in axs:
         ax.minorticks_on()
         ax.set_xlim((0, Ndays))
+        ax.set_xticks([])
+
+    axs[0].yaxis.set_ticks(np.arange(0, 24, 2))
 
     axs[1].set_ylim((0.0, 20.0))
     axs[2].set_ylim((0.0, 1.0))
@@ -501,14 +506,17 @@ def plot_timeline(reports):
     for idd in range(Ndays):
         day = d0 + timedelta(days=idd)
 
-        #monday
-        if day.weekday() == 0:
-            axs[0].axvline(idd, linestyle='dotted',alpha=0.15)
+        for ax in axs:
+            #monday
+            if day.weekday() == 0:
+                ax.axvline(idd, linestyle='dotted',alpha=0.15)
 
-        #first day of month
-        if day.day == 1:
-            axs[0].axvline(idd, linestyle='dashed',alpha=0.2)
+            #first day of month
+            if day.day == 1:
+                ax.axvline(idd, linestyle='dashed',alpha=0.2)
 
+
+    #ideas:
 
     #visualize start & end time of days
     #duration of work 
@@ -518,6 +526,9 @@ def plot_timeline(reports):
     # ratio of real to start-to-end time
     # -number of sessions per day
     # -minutes of deep work
+    # -how many different projects are touched per day (less is better)
+
+
 
     #real duration done work
     axs[1].plot(days, day_real_len, 'k-', linestyle='steps-post')
@@ -525,16 +536,61 @@ def plot_timeline(reports):
     #from start to end duration
     axs[1].plot(days, day_len, 'b-', linestyle='steps-post')
     
+    #shade workdays
+    for i in range(len(days)):
+        if day_real_len[i] < 1.0:
+            axs[1].axvspan(
+                    days[i], days[i]+1,
+                    color='gray',
+                    alpha=0.15,
+                    facecolor="none",
+                    edgecolor="none",
+                    linewidth=0.0,
+                    )
 
     #efficiency
     axs[2].plot(days, day_real_len/day_len, 'k-', linestyle='steps-post')
 
 
+    #weekday counter to top
+    for idd in range(Ndays):
+        day = d0 + timedelta(days=idd)
+
+        if day.weekday() == 0: dlabel = 'Mon'
+        if day.weekday() == 1: dlabel = 'Tue'
+        if day.weekday() == 2: dlabel = 'Wed'
+        if day.weekday() == 3: dlabel = 'Thu'
+        if day.weekday() == 4: dlabel = 'Fri'
+        if day.weekday() == 5: dlabel = 'Sat'
+        if day.weekday() == 6: dlabel = 'Sun'
+        axs[0].text(idd+0.5, 24.5, dlabel, fontsize=5, rotation=90.0, ha='center', va='bottom')
+
+        if day.day == 1:
+            if day.month == 1 : mlabel = 'Jan'
+            if day.month == 2 : mlabel = 'Feb'
+            if day.month == 3 : mlabel = 'Mar'
+            if day.month == 4 : mlabel = 'Apr'
+            if day.month == 5 : mlabel = 'May'
+            if day.month == 6 : mlabel = 'Jun'
+            if day.month == 7 : mlabel = 'Jul'
+            if day.month == 8 : mlabel = 'Aug'
+            if day.month == 9 : mlabel = 'Sep'
+            if day.month == 10: mlabel = 'Oct'
+            if day.month == 11: mlabel = 'Nov'
+            if day.month == 12: mlabel = 'Dec'
+
+            axs[0].text(idd+0.5, 27.0, mlabel, fontsize=6, rotation=90.0, ha='center', va='bottom')
+
+        if day.day > 1:
+            axs[0].text(idd+0.5, 27.0, str(day.day), fontsize=4, rotation=90.0, ha='center', va='bottom')
+
+
+
     #----------------------------
     axleft    = 0.12
-    axbottom  = 0.16
+    axbottom  = 0.06
     axright   = 0.96
-    axtop     = 0.95
+    axtop     = 0.89
     fig.subplots_adjust(left=axleft, bottom=axbottom, right=axright, top=axtop)
     fig.savefig('timeline.pdf')
 
