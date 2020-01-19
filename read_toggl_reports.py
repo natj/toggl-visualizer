@@ -1,6 +1,6 @@
 import glob
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def read_csv2dict(fname):
@@ -47,6 +47,23 @@ def read_csv2dict(fname):
                     continue
                 tend   = datetime.strptime(row['End time'],   '%H:%M:%S')
 
+                #-------------------
+                #clean special weeks when toggl clock was off from HEL-NYC move
+                if datetime.strptime('Jan 6 2020 1:00AM', '%b %d %Y %I:%M%p') < day < datetime.strptime('Jan 19 2020 6:00AM', '%b %d %Y %I:%M%p'):
+                    d0 = day + timedelta(hours=tstart.hour, minutes=tstart.minute, seconds=tstart.second)
+                    d1 = day + timedelta(hours=tend.hour, minutes=tend.minute, seconds=tend.second)
+
+                    dshift0 = d0 - timedelta(hours=7)
+                    dshift1 = d1 - timedelta(hours=7)
+                    print("shifting:", dshift0, dshift1)
+
+                    tstart = tstart.replace(hour=dshift0.hour, minute=dshift0.minute, second=dshift0.second)
+                    tend = tend.replace(hour=dshift1.hour, minute=dshift1.minute, second=dshift1.second)
+
+                    day = dshift0
+                    
+
+                #-------------------
                 tlenP   = datetime.strptime(row['Duration'],   '%H:%M:%S')
                 tlen = 3600.0*tlenP.hour + 60.0*tlenP.minute + tlenP.second
 
